@@ -17,21 +17,15 @@ public class JDBC {
    * Private constructor to prevent instantiation outside the class
    **/
   private JDBC() {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          Class.forName("com.mysql.jdbc.Driver");
-          connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-        } catch (SQLException e) {
-          e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-          e.printStackTrace();
-          throw new RuntimeException(e);
-        }
-      }
-    }).start();
-
+    try {
+      Class.forName("com.mysql.jdbc.Driver");
+      connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    }
   }
 
   /**
@@ -43,5 +37,11 @@ public class JDBC {
     }
     return instance;
   }
+
+  public Connection getConnection() {
+    return connection;
+  }
+
+
 }
 
