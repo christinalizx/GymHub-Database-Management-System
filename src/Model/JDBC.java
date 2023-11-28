@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class JDBC {
 
-  private static final String URL = "jdbc:mysql://database-1.cpqkz8uyycse.us-east-1.rds.amazonaws.com:3306/gymhubdb";
+  private static final String URL = "jdbc:mysql://database-1.cpqkz8uyycse.us-east-1.rds.amazonaws.com/gymhubdb";
   private static final String USERNAME = "admin";
   private static final String PASSWORD = "WKkn3q3YaPWNW8NthFWU";
   private static JDBC instance;
