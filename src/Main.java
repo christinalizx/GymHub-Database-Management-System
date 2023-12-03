@@ -4,10 +4,9 @@ import Controller.Controller;
 
 public class Main {
 
-
   public static void main(String[] args) {
     JDBC jdbc = JDBC.getInstance();
-    View view = new View(new Controller(),jdbc);
+    View view = new View(new Controller(), jdbc);
 
     // Display login or registration prompt based on user choice
     int choice = view.showLoginOrRegisterChoice();
@@ -23,36 +22,20 @@ public class Main {
       System.out.println("Operation canceled by user.");
     }
   }
-
   private static void handleLogin(View view) {
-    // Display login prompt
-    String[] credentials = view.promptCredentials();
-
-    // Check if the user clicked "Cancel"
-    if (credentials == null || credentials.length == 0 || credentials[0].equals("CANCEL")) {
-      System.out.println("Login canceled by user.");
-      System.exit(0);
-    }
-
-    // Extract username and password
-    String username = credentials[0];
-    String password = credentials[1];
-
-    // Verify credentials using the controller
-    boolean isCredentialsValid = view.getController().verifyCredentials(username, password);
-
-    if (isCredentialsValid) {
-      // Successful login
-      view.showOutput("Login successful!", "Success");
-    } else {
-      // Failed login
-      view.showError("Invalid username or password.", "Login Failed");
-    }
+    // Call the handleLogin method in the View
+    view.handleLogin();
   }
 
-  private static void handleRegistration(View view) {
 
-    // Show registration form
+
+  private static void handleRegistration(View view) {
     view.showRegistrationForm();
+    handleMainPage(view);
+  }
+
+  private static void handleMainPage(View view) {
+    // Display the main page with buttons
+    view.showMainPage();
   }
 }
