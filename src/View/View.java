@@ -11,6 +11,7 @@ import javax.swing.*;
 
 import Controller.Controller;
 import Model.GymUsers;
+import Model.Gyms;
 import Model.JDBC;
 
 public class View {
@@ -18,10 +19,6 @@ public class View {
   public static final int REGISTER_CHOICE = 1;
   private final Controller controller;
   private JDBC jdbc;
-  public static final int FORUMS_CHOICE = 1;
-  public static final int GYM_INFO_CHOICE = 2;
-  public static final int WORKOUT_DATA_CHOICE = 3;
-  public static final int USER_INFO_CHOICE = 4;
 
   public View(Controller controller, JDBC jdbc) {
     this.controller = controller;
@@ -125,7 +122,6 @@ public class View {
   }
 
 
-  // Inside the View class
   public void showRegistrationForm() {
     List<String> gymNames = getGymNamesFromDatabase();
 
@@ -156,7 +152,6 @@ public class View {
       String address = addressField.getText();
 
       String selectedGym = (String) gymSpinner.getSelectedItem();
-
       if (!username.trim().isEmpty() && !password.trim().isEmpty() && !address.trim().isEmpty() && selectedGym != null) {
         controller.addUser(username, password, address, selectedGym);
       } else {
@@ -242,11 +237,67 @@ public class View {
               "Address: " + gymUser.getAddress() + "\n" +
               "Gym Name: " + getController().getGymName(username);
 
-      showOutput(userInfo, "User Information");
+      JTextArea textArea = new JTextArea(userInfo);
+      textArea.setEditable(false);
+
+      JScrollPane scrollPane = new JScrollPane(textArea);
+      scrollPane.setPreferredSize(new Dimension(400, 300));
+
+      JButton editButton = new JButton("Edit");
+      editButton.addActionListener(e -> handleEditUserInformation(gymUser));
+
+      JPanel panel = new JPanel();
+      panel.setLayout(new BorderLayout());
+      panel.add(scrollPane, BorderLayout.CENTER);
+      panel.add(editButton, BorderLayout.SOUTH);
+
+      JOptionPane.showMessageDialog(null, panel, "User Information", JOptionPane.INFORMATION_MESSAGE);
     } else {
       showError("User information not found.", "Error");
     }
   }
+
+  private void handleEditUserInformation(GymUsers gymUser) {
+    JTextField usernameField = new JTextField(gymUser.getUsername());
+    JPasswordField passwordField = new JPasswordField(gymUser.getPassword());
+    JTextField addressField = new JTextField(gymUser.getAddress());
+
+    JPanel editPanel = new JPanel(new GridLayout(4, 2));
+    editPanel.add(new JLabel("Username:"));
+    editPanel.add(usernameField);
+    editPanel.add(new JLabel("Password:"));
+    editPanel.add(passwordField);
+    editPanel.add(new JLabel("Address:"));
+    editPanel.add(addressField);
+
+    int result = JOptionPane.showConfirmDialog(null, editPanel, "Edit User Information",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+    if (result == JOptionPane.OK_OPTION) {
+      String newUsername = usernameField.getText();
+      char[] newPasswordChars = passwordField.getPassword();
+      String newPassword = new String(newPasswordChars);
+      String newAddress = addressField.getText();
+
+      // Update user information in the database using stored procedures
+      getController().updateUsername(gymUser.getUsername(), newUsername);
+      getController().updatePassword(newUsername, newPassword);
+      getController().updateAddress(newUsername, newAddress);
+
+      // Show a dialog indicating successful update
+      showOutput("User information updated successfully!", "Success");
+
+      // Close the user information page
+      Window parentWindow = SwingUtilities.windowForComponent(editPanel);
+      if (parentWindow instanceof JDialog) {
+        ((JDialog) parentWindow).dispose();
+      }
+    }
+  }
+
+
+
+
 
   private void showMessage(String message, String title) {
     JTextArea textArea = new JTextArea(message);
@@ -257,10 +308,6 @@ public class View {
 
     JOptionPane.showMessageDialog(null, scrollPane, title, JOptionPane.INFORMATION_MESSAGE);
   }
-
-
-
-
 
   public void showError(String message, String title) {
     JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);

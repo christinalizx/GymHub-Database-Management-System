@@ -1,8 +1,16 @@
 package Controller;
 
+import com.sun.tools.javac.Main;
+
 import Model.GymUsers;
 import Model.JDBC;
+import View.View;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,13 +20,21 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.*;
+
 public class Controller {
   private final JDBC jdbc;
   private String loggedInUsername;
+  private View view;
 
   public Controller() {
     this.jdbc = JDBC.getInstance();
   }
+
+  public void setView(View view) {
+    this.view = view;
+  }
+
 
   /**
    * Method to verify user credentials using the MySQL function
@@ -54,13 +70,12 @@ public class Controller {
       return isVerified;
     } catch (SQLException e) {
       e.printStackTrace();
-    } finally {
-      // ... (close resources)
     }
 
     // Return false if an exception occurred
     return false;
   }
+
   public void addUser(String username, String password, String address, String gymName) {
     try {
       // Get the gymId based on the selected gymName
@@ -77,6 +92,7 @@ public class Controller {
       e.printStackTrace();
     }
   }
+
   public void setLoggedInUsername(String username) {
     this.loggedInUsername = username;
   }
@@ -84,6 +100,7 @@ public class Controller {
   public String getLoggedInUsername() {
     return loggedInUsername;
   }
+
   public void handleForumPost(String selectedForum) {
     // Add the logic to handle forum post button click
     // For now, just print a message
@@ -132,8 +149,6 @@ public class Controller {
         forumNames.add(forumName);
       }
 
-      resultSet.close();
-      statement.close();
     } catch (Exception e) {
       e.printStackTrace();
       // Handle exceptions as needed
@@ -144,34 +159,24 @@ public class Controller {
 
   public GymUsers getUserInformation(String username) {
     Connection connection = null;
-    PreparedStatement preparedStatement = null;
+    CallableStatement callableStatement = null;
     ResultSet resultSet = null;
     GymUsers gymUser = null;
 
     try {
       connection = jdbc.getConnection();
+      String query = "{CALL GetUserInformation(?)}";
+      callableStatement = connection.prepareCall(query);
+      callableStatement.setString(1, username);
+      resultSet = callableStatement.executeQuery();
 
-      // Prepare the SQL statement to retrieve user information
-      String query = "SELECT gu.username, gu.password, gu.address, gu.gym_id, gyms.gym_name " +
-              "FROM gym_users gu " +
-              "JOIN gyms ON gu.gym_id = gyms.gym_id " +
-              "WHERE gu.username = ?";
-      preparedStatement = connection.prepareStatement(query);
-      preparedStatement.setString(1, username);
-
-      // Execute the query
-      resultSet = preparedStatement.executeQuery();
-
-      // Check if the result set is not empty
       if (resultSet.next()) {
-        // Extract user information from the result set
-        String fetchedUsername = resultSet.getString("username");
         String password = resultSet.getString("password");
         String address = resultSet.getString("address");
-        String gymName = resultSet.getString("gym_name");
+        int gymId = resultSet.getInt("gym_id");
 
-        // Create a GymUsers object with the retrieved data
-        gymUser = new GymUsers(fetchedUsername, password, address, getGymIdByName(gymName));
+        // Create a GymUsers object with the retrieved information
+        gymUser = new GymUsers(username, password, address, gymId);
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -179,6 +184,7 @@ public class Controller {
 
     return gymUser;
   }
+
   public String getGymName(String username) {
     Connection connection = null;
     PreparedStatement preparedStatement = null;
@@ -205,18 +211,60 @@ public class Controller {
       }
     } catch (SQLException e) {
       e.printStackTrace();
-    } finally {
-      // Close resources
-      try {
-        if (resultSet != null) resultSet.close();
-        if (preparedStatement != null) preparedStatement.close();
-        if (connection != null) connection.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
     }
     return gymName;
 
   }
+
+  public void updateUsername(String oldUsername, String newUsername) {
+    try {
+      Connection connection = jdbc.getConnection();
+      String query = "{CALL UpdateUsername(?, ?)}";
+      try (CallableStatement callableStatement = connection.prepareCall(query)) {
+        callableStatement.setString(1, oldUsername);
+        callableStatement.setString(2, newUsername);
+        callableStatement.executeUpdate();
+        loggedInUsername = newUsername;
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle exceptions as needed
+    }
+  }
+
+  public void updatePassword(String username, String newPassword) {
+    try {
+      Connection connection = jdbc.getConnection();
+      String query = "{CALL UpdatePassword(?, ?)}";
+      try (CallableStatement callableStatement = connection.prepareCall(query)) {
+        callableStatement.setString(1, username);
+        callableStatement.setString(2, newPassword);
+        callableStatement.executeUpdate();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle exceptions as needed
+    }
+  }
+
+  public void updateAddress(String username, String newAddress) {
+    try {
+      Connection connection = jdbc.getConnection();
+      String query = "{CALL UpdateAddress(?, ?)}";
+      try (CallableStatement callableStatement = connection.prepareCall(query)) {
+        callableStatement.setString(1, username);
+        callableStatement.setString(2, newAddress);
+        callableStatement.executeUpdate();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle exceptions as needed
+    }
+  }
+
 }
+
+
+
+
 

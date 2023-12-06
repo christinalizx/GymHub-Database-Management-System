@@ -1,9 +1,17 @@
 package Model;
 
+import javax.persistence.Entity;
+import javax.persistence.Column;
+import javax.persistence.Table;
+
+
+@Entity
+@Table(name = "gym_users")
 public class GymUsers {
   private String username;
   private String password;
   private String address;
+  @Column(name = "gym_id")
   private int gymId;
 
   /** Default constructor
