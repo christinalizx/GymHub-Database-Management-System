@@ -12,3 +12,6 @@ com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException: Cann
 	at ...
 ```
 I think it's possible that when you try other methods involving updating something that is a foreign key, it may pop up. 
+
+## Forums
+So far only has spinner displaying what forums we have.
