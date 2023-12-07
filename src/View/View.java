@@ -246,16 +246,48 @@ public class View {
       JButton editButton = new JButton("Edit");
       editButton.addActionListener(e -> handleEditUserInformation(gymUser));
 
+      JButton deleteButton = new JButton("Delete");
+      deleteButton.addActionListener(e -> handleDeleteUser(gymUser.getUsername()));
+
       JPanel panel = new JPanel();
       panel.setLayout(new BorderLayout());
       panel.add(scrollPane, BorderLayout.CENTER);
-      panel.add(editButton, BorderLayout.SOUTH);
+
+      // Add buttons to a separate panel
+      JPanel buttonPanel = new JPanel();
+      buttonPanel.add(editButton);
+      buttonPanel.add(deleteButton);
+
+      // Add the button panel to the main panel
+      panel.add(buttonPanel, BorderLayout.SOUTH);
 
       JOptionPane.showMessageDialog(null, panel, "User Information", JOptionPane.INFORMATION_MESSAGE);
     } else {
       showError("User information not found.", "Error");
     }
   }
+
+  private void handleDeleteUser(String username) {
+    int choice = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this user?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+
+    if (choice == JOptionPane.YES_OPTION) {
+      // Call the controller method to delete the user
+      boolean isUserDeleted = getController().removeUserByUsername(username);
+
+      if (isUserDeleted) {
+        // Show a message indicating successful deletion
+        showOutput("User deleted successfully.", "Deletion Successful");
+      } else {
+        // Show an error message if deletion failed
+        showError("Failed to delete user. Please try again.", "Deletion Error");
+      }
+
+      // Exit the application
+      System.exit(0);
+    }
+  }
+
+
 
   private void handleEditUserInformation(GymUsers gymUser) {
     JTextField usernameField = new JTextField(gymUser.getUsername());
@@ -292,12 +324,14 @@ public class View {
       if (parentWindow instanceof JDialog) {
         ((JDialog) parentWindow).dispose();
       }
+      Window[] windows = JFrame.getWindows();
+      for (Window window : windows) {
+        if (window instanceof JFrame) {
+          ((JFrame) window).dispose();
+        }
+      }
     }
   }
-
-
-
-
 
   private void showMessage(String message, String title) {
     JTextArea textArea = new JTextArea(message);

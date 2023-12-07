@@ -1,16 +1,9 @@
 package Controller;
 
-import com.sun.tools.javac.Main;
-
 import Model.GymUsers;
 import Model.JDBC;
 import View.View;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URISyntaxException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,19 +13,14 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
 
 public class Controller {
   private final JDBC jdbc;
   private String loggedInUsername;
-  private View view;
+
 
   public Controller() {
     this.jdbc = JDBC.getInstance();
-  }
-
-  public void setView(View view) {
-    this.view = view;
   }
 
 
@@ -261,6 +249,20 @@ public class Controller {
       // Handle exceptions as needed
     }
   }
+
+  public boolean removeUserByUsername(String username) {
+    System.out.println(username);
+    try (Connection connection = jdbc.getConnection();
+         PreparedStatement statement = connection.prepareStatement("CALL RemoveUserByUsername(?)")) {
+      statement.setString(1, username);
+      statement.executeUpdate();
+      return true;  // Return true if the deletion was successful
+    } catch (SQLException e) {
+      e.printStackTrace(); // Handle the exception appropriately
+      return false;  // Return false if the deletion failed
+    }
+  }
+
 
 }
 
