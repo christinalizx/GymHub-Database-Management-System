@@ -1,12 +1,10 @@
-import Model.JDBC;
 import View.View;
 import Controller.Controller;
 
 public class Main {
 
   public static void main(String[] args) {
-    JDBC jdbc = JDBC.getInstance();
-    View view = new View(new Controller(), jdbc);
+    View view = new View(new Controller());
 
     // Display login or registration prompt based on user choice
     int choice = view.showLoginOrRegisterChoice();

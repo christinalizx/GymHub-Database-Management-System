@@ -25,22 +25,17 @@ public class JDBC {
 
   // Static method to get the singleton instance
   public static synchronized JDBC getInstance() {
-    try {
-      if (instance == null) {
-        instance = new JDBC();
-      } else if (instance.connection.isClosed()) {
-        instance.connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-      // Handle the exception appropriately
-      // return null;
+    if (instance == null) {
+      instance = new JDBC();
     }
     return instance;
   }
 
   // Method to get the database connection
-  public Connection getConnection() {
+  public Connection getConnection() throws SQLException {
+    if (connection == null || connection.isClosed()) {
+      connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+    }
     return connection;
   }
 

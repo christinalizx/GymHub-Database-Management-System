@@ -4,7 +4,6 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,18 +16,15 @@ import Model.Exercise;
 import Model.ExerciseSet;
 import Model.GymUsers;
 import Model.Gym;
-import Model.JDBC;
 import Model.Workout;
 
 public class View {
   public static final int LOGIN_CHOICE = 0;
   public static final int REGISTER_CHOICE = 1;
   private final Controller controller;
-  private JDBC jdbc;
 
-  public View(Controller controller, JDBC jdbc) {
+  public View(Controller controller) {
     this.controller = controller;
-    this.jdbc = jdbc;
   }
   public int showLoginOrRegisterChoice() {
     Object[] options = {"Login", "Register", "Cancel"};
@@ -105,31 +101,8 @@ public class View {
     }
   }
 
-  public List<String> getGymNamesFromDatabase() {
-    List<String> gymNames = new ArrayList<>();
-
-    try {
-      Connection connection = jdbc.getConnection();
-      Statement statement = connection.createStatement();
-      ResultSet resultSet = statement.executeQuery("SELECT gym_name FROM gyms");
-
-      while (resultSet.next()) {
-        String gymName = resultSet.getString("gym_name");
-        gymNames.add(gymName);
-      }
-
-      resultSet.close();
-      statement.close();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    return gymNames;
-  }
-
-
   public void showRegistrationForm() {
-    List<String> gymNames = getGymNamesFromDatabase();
+    List<String> gymNames = getController().getGymNamesFromDatabase();
 
     JPanel panel = new JPanel(new GridLayout(5, 2));
     JTextField usernameField = new JTextField();
@@ -482,17 +455,8 @@ public class View {
       String description = descriptionField.getText();
       int duration = Integer.parseInt(durationField.getText());
 
-      try (Connection connection = jdbc.getConnection()) {
-        if (connection.isClosed()) {
-          System.out.println("Closed boi");
-        }
-        getController().addWorkout(connection, Date.valueOf(LocalDate.now()), description, duration);
-      } catch (SQLException e) {
-        e.printStackTrace();
-        // Handle the exception appropriately
-      }
       // Call a method in the controller to add the new workout
-
+      getController().addWorkout(Date.valueOf(LocalDate.now()), description, duration);
 
       // Display a message indicating successful addition
       showOutput("Workout added successfully!", "Success");

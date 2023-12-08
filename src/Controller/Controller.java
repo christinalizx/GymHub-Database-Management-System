@@ -179,6 +179,28 @@ public class Controller {
     return gymUser;
   }
 
+  public List<String> getGymNamesFromDatabase() {
+    List<String> gymNames = new ArrayList<>();
+
+    try {
+      Connection connection = jdbc.getConnection();
+      Statement statement = connection.createStatement();
+      ResultSet resultSet = statement.executeQuery("SELECT gym_name FROM gyms");
+
+      while (resultSet.next()) {
+        String gymName = resultSet.getString("gym_name");
+        gymNames.add(gymName);
+      }
+
+      resultSet.close();
+      statement.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return gymNames;
+  }
+
   public String getGymName(String username) {
     Connection connection = null;
     PreparedStatement preparedStatement = null;
@@ -380,8 +402,8 @@ public class Controller {
     return exerciseSets;
   }
 
-  public void addWorkout(Connection connection, Date completionDate, String description, int duration) {
-    try {
+  public void addWorkout(Date completionDate, String description, int duration) {
+    try (Connection connection = jdbc.getConnection()) {
       CallableStatement callableStatement = connection.prepareCall("{call AddWorkout(?, ?, ?, ?)}");
       callableStatement.setString(1, loggedInUsername);
       callableStatement.setDate(2, completionDate);
