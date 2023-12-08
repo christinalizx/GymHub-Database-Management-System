@@ -12,6 +12,7 @@ import javax.swing.*;
 import Controller.Controller;
 import Model.GymUsers;
 import Model.Gyms;
+import Model.Gym;
 import Model.JDBC;
 
 public class View {
@@ -196,6 +197,10 @@ public class View {
         break;
       case "User Information":
         showUserInformation();
+        break;
+      case "Gym Information":
+        showGymInformation();
+        break;
     }
   }
 
@@ -218,8 +223,36 @@ public class View {
   }
 
   public void showGymInformation() {
-    // Implement logic to display gym information
-    showMessage("Gym Information Placeholder", "Gym Information");
+    String username = getController().getLoggedInUsername();
+    GymUsers gymUser = getController().getUserInformation(username);
+
+    if (gymUser != null) {
+      // Fetch gym information based on the username
+      Gym gym = getController().getGymByUser(username);
+
+      if (gym != null) {
+        // Display gym information
+        String userInfo = "Username: " + gymUser.getUsername() + "\n" +
+                "Password: " + gymUser.getPassword() + "\n" +
+                "Address: " + gymUser.getAddress() + "\n" +
+                "Gym Name: " + gym.getGymName() + "\n" +
+                "Gym Address: " + gym.getAddress() + "\n" +
+                "Opening Time: " + gym.getOpeningTime() + "\n" +
+                "Closing Time: " + gym.getClosingTime();
+
+        JTextArea textArea = new JTextArea(userInfo);
+        textArea.setEditable(false);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(400, 300));
+
+        JOptionPane.showMessageDialog(null, scrollPane, "User Information", JOptionPane.INFORMATION_MESSAGE);
+      } else {
+        showError("Gym information not found for the user.", "Error");
+      }
+    } else {
+      showError("User information not found.", "Error");
+    }
   }
 
   public void showWorkoutData() {
@@ -320,15 +353,10 @@ public class View {
       showOutput("User information updated successfully!", "Success");
 
       // Close the user information page
-      Window parentWindow = SwingUtilities.windowForComponent(editPanel);
-      if (parentWindow instanceof JDialog) {
-        ((JDialog) parentWindow).dispose();
-      }
-      Window[] windows = JFrame.getWindows();
-      for (Window window : windows) {
-        if (window instanceof JFrame) {
-          ((JFrame) window).dispose();
-        }
+      Container parentContainer = editPanel.getTopLevelAncestor();
+      if (parentContainer instanceof Window) {
+        Window parentWindow = (Window) parentContainer;
+        parentWindow.dispose();
       }
     }
   }

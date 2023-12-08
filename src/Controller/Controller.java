@@ -2,6 +2,7 @@ package Controller;
 
 import Model.GymUsers;
 import Model.JDBC;
+import Model.Gym;
 import View.View;
 
 import java.sql.CallableStatement;
@@ -10,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -264,6 +266,30 @@ public class Controller {
   }
 
 
+  public Gym getGymByUser(String username) {
+    try {
+      Connection connection = jdbc.getConnection();
+      CallableStatement callableStatement = connection.prepareCall("{call get_gym_by_user(?)}");
+      callableStatement.setString(1, username);
+
+      ResultSet resultSet = callableStatement.executeQuery();
+
+      if (resultSet.next()) {
+        // Create a Gym object with the retrieved data
+        int gymId = resultSet.getInt("gym_id");
+        String gymName = resultSet.getString("gym_name");
+        String address = resultSet.getString("address");
+        Time openingTime = resultSet.getTime("opening_time");
+        Time closingTime = resultSet.getTime("closing_time");
+
+        return new Gym(gymId, gymName, address, openingTime, closingTime);
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+
+    return null; // Return null if gym information is not found
+  }
 }
 
 
