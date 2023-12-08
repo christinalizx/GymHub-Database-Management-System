@@ -2,7 +2,9 @@ package View;
 
 import java.awt.*;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -480,8 +482,17 @@ public class View {
       String description = descriptionField.getText();
       int duration = Integer.parseInt(durationField.getText());
 
+      try (Connection connection = jdbc.getConnection()) {
+        if (connection.isClosed()) {
+          System.out.println("Closed boi");
+        }
+        getController().addWorkout(connection, Date.valueOf(LocalDate.now()), description, duration);
+      } catch (SQLException e) {
+        e.printStackTrace();
+        // Handle the exception appropriately
+      }
       // Call a method in the controller to add the new workout
-      getController().addWorkout(getController().getLoggedInUsername(), LocalDate.now(), description, duration);
+
 
       // Display a message indicating successful addition
       showOutput("Workout added successfully!", "Success");
@@ -489,7 +500,7 @@ public class View {
   }
 
   // Method to handle adding a new exercise within a workout
-  public void handleNewExercise(Workout workout) {
+  public void handleNewExercise(int workoutId) {
     // Implement logic to collect information for the new exercise
     JTextField nameField = new JTextField();
     JTextField notesField = new JTextField();
@@ -505,11 +516,11 @@ public class View {
 
     if (result == JOptionPane.OK_OPTION) {
       // Retrieve information for the new exercise
-      String name = nameField.getText();
+      String exerciseName = nameField.getText();
       String notes = notesField.getText();
 
       // Call a method in the controller to add the new exercise to the specified workout
-      getController().addExercise(workout, name, notes);
+      getController().addExercise(workoutId, exerciseName, notes);
 
       // Display a message indicating successful addition
       showOutput("Exercise added successfully!", "Success");
@@ -517,7 +528,7 @@ public class View {
   }
 
   // Method to handle adding a new exercise set within an exercise
-  public void handleNewExerciseSet(Exercise exercise) {
+  public void handleNewExerciseSet(int exerciseId, int workoutId) {
     // Implement logic to collect information for the new exercise set
 
     JTextField setsField = new JTextField();
@@ -542,7 +553,7 @@ public class View {
       int weight = Integer.parseInt(weightField.getText());
 
       // Call a method in the controller to add the new exercise set to the specified exercise
-      getController().addExerciseSet(exercise, sets, reps, weight);
+      getController().addExerciseSet(exerciseId, workoutId, sets, reps, weight);
 
       // Display a message indicating successful addition
       showOutput("Exercise Set added successfully!", "Success");

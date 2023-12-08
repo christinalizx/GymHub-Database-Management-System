@@ -318,6 +318,7 @@ public class Controller {
     } catch (SQLException e) {
       e.printStackTrace();
       // Handle the exception appropriately
+      System.err.print("Closed");
     }
 
     return workouts;
@@ -377,6 +378,51 @@ public class Controller {
     }
 
     return exerciseSets;
+  }
+
+  public void addWorkout(Connection connection, Date completionDate, String description, int duration) {
+    try {
+      CallableStatement callableStatement = connection.prepareCall("{call AddWorkout(?, ?, ?, ?)}");
+      callableStatement.setString(1, loggedInUsername);
+      callableStatement.setDate(2, completionDate);
+      callableStatement.setString(3, description);
+      callableStatement.setInt(4, duration);
+
+      callableStatement.executeUpdate();
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+  }
+
+  public void addExercise(int workoutId, String exerciseName, String notes) {
+    try (Connection connection = jdbc.getConnection()) {
+      CallableStatement callableStatement = connection.prepareCall("{call AddExercise(?, ?, ?)}");
+      callableStatement.setInt(1, workoutId);
+      callableStatement.setString(2, exerciseName);
+      callableStatement.setString(3, notes);
+
+      callableStatement.executeUpdate();
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+  }
+
+  public void addExerciseSet(int exerciseId, int workoutId, int sets, int reps, int weight) {
+    try (Connection connection = jdbc.getConnection()) {
+      CallableStatement callableStatement = connection.prepareCall("{call AddExerciseSet(?, ?, ?, ?, ?)}");
+      callableStatement.setInt(1, exerciseId);
+      callableStatement.setInt(2, workoutId);
+      callableStatement.setInt(3, sets);
+      callableStatement.setInt(4, reps);
+      callableStatement.setInt(5, weight);
+
+      callableStatement.executeUpdate();
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
   }
 }
 
