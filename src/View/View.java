@@ -4,16 +4,19 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
 
 import Controller.Controller;
+import Model.Exercise;
+import Model.ExerciseSet;
 import Model.GymUsers;
-import Model.Gyms;
 import Model.Gym;
 import Model.JDBC;
+import Model.Workout;
 
 public class View {
   public static final int LOGIN_CHOICE = 0;
@@ -201,6 +204,9 @@ public class View {
       case "Gym Information":
         showGymInformation();
         break;
+      case "Workout & Exercise Data":
+        showWorkouts(controller.getWorkouts());
+        break;
     }
   }
 
@@ -321,7 +327,6 @@ public class View {
   }
 
 
-
   private void handleEditUserInformation(GymUsers gymUser) {
     JTextField usernameField = new JTextField(gymUser.getUsername());
     JPasswordField passwordField = new JPasswordField(gymUser.getPassword());
@@ -398,4 +403,150 @@ public class View {
   public Controller getController() {
     return controller;
   }
+
+  // Method to display the list of workouts
+  public void showWorkouts(List<Workout> workouts) {
+    // Create a panel to hold the components
+    JPanel panel = new JPanel(new BorderLayout());
+
+    // Create a combo box for existing workouts
+    JComboBox<Workout> workoutComboBox = new JComboBox<>(workouts.toArray(new Workout[0]));
+    panel.add(workoutComboBox, BorderLayout.CENTER);
+
+    // Create a button for adding a new workout
+    JButton newWorkoutButton = new JButton("New Workout");
+    panel.add(newWorkoutButton, BorderLayout.SOUTH);
+
+    // Show the dialog with the panel
+    int result = JOptionPane.showConfirmDialog(null, panel, "Select or Create Workout",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+    if (result == JOptionPane.OK_OPTION) {
+      if (workoutComboBox.getSelectedItem() != null) {
+        // User selected an existing workout
+        Workout selectedWorkout = (Workout) workoutComboBox.getSelectedItem();
+        // Call a method to display exercises for the selected workout
+        showExercises(controller.getExercises(selectedWorkout.getWorkoutId()));
+      } else {
+        // User clicked "New Workout" button
+        handleNewWorkout();
+      }
+    }
+  }
+
+  // Method to display the list of exercises
+  public void showExercises(List<Exercise> exercises) {
+    // Implement logic to display the list of exercises, handle user interaction
+    JComboBox<Exercise> exerciseComboBox = new JComboBox<>(exercises.toArray(new Exercise[0]));
+    int result = JOptionPane.showConfirmDialog(null, exerciseComboBox, "Select Exercise",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+    if (result == JOptionPane.OK_OPTION) {
+      Exercise selectedExercise = (Exercise) exerciseComboBox.getSelectedItem();
+      // Call a method to display exercise sets for the selected exercise
+      showExerciseSets(controller.getExerciseSets(selectedExercise.getExerciseId()));
+    }
+  }
+
+  // Method to display the list of exercise sets
+  public void showExerciseSets(List<ExerciseSet> exerciseSets) {
+    // Implement logic to display the list of exercise sets, handle user interaction
+    JTextArea exerciseSetsTextArea = new JTextArea();
+    exerciseSets.forEach(set -> exerciseSetsTextArea.append(set.toString() + "\n"));
+
+    JScrollPane scrollPane = new JScrollPane(exerciseSetsTextArea);
+    scrollPane.setPreferredSize(new Dimension(400, 300));
+
+    JOptionPane.showMessageDialog(null, scrollPane, "Exercise Sets", JOptionPane.INFORMATION_MESSAGE);
+  }
+
+  // Method to handle adding a new workout
+  public void handleNewWorkout() {
+    // Implement logic to collect information for the new workout
+    JTextField descriptionField = new JTextField();
+    JTextField durationField = new JTextField();
+
+    JPanel panel = new JPanel(new GridLayout(2, 2));
+    panel.add(new JLabel("Description:"));
+    panel.add(descriptionField);
+    panel.add(new JLabel("Duration:"));
+    panel.add(durationField);
+
+    int result = JOptionPane.showConfirmDialog(null, panel, "Add Workout",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+    if (result == JOptionPane.OK_OPTION) {
+      // Retrieve information for the new workout
+      String description = descriptionField.getText();
+      int duration = Integer.parseInt(durationField.getText());
+
+      // Call a method in the controller to add the new workout
+      getController().addWorkout(getController().getLoggedInUsername(), LocalDate.now(), description, duration);
+
+      // Display a message indicating successful addition
+      showOutput("Workout added successfully!", "Success");
+    }
+  }
+
+  // Method to handle adding a new exercise within a workout
+  public void handleNewExercise(Workout workout) {
+    // Implement logic to collect information for the new exercise
+    JTextField nameField = new JTextField();
+    JTextField notesField = new JTextField();
+
+    JPanel panel = new JPanel(new GridLayout(2, 2));
+    panel.add(new JLabel("Name:"));
+    panel.add(nameField);
+    panel.add(new JLabel("Notes:"));
+    panel.add(notesField);
+
+    int result = JOptionPane.showConfirmDialog(null, panel, "Add Exercise",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+    if (result == JOptionPane.OK_OPTION) {
+      // Retrieve information for the new exercise
+      String name = nameField.getText();
+      String notes = notesField.getText();
+
+      // Call a method in the controller to add the new exercise to the specified workout
+      getController().addExercise(workout, name, notes);
+
+      // Display a message indicating successful addition
+      showOutput("Exercise added successfully!", "Success");
+    }
+  }
+
+  // Method to handle adding a new exercise set within an exercise
+  public void handleNewExerciseSet(Exercise exercise) {
+    // Implement logic to collect information for the new exercise set
+
+    JTextField setsField = new JTextField();
+    JTextField repsField = new JTextField();
+    JTextField weightField = new JTextField();
+
+    JPanel panel = new JPanel(new GridLayout(3, 2));
+    panel.add(new JLabel("Sets:"));
+    panel.add(setsField);
+    panel.add(new JLabel("Reps:"));
+    panel.add(repsField);
+    panel.add(new JLabel("Weight:"));
+    panel.add(weightField);
+
+    int result = JOptionPane.showConfirmDialog(null, panel, "Add Exercise Set",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+    if (result == JOptionPane.OK_OPTION) {
+      // Retrieve information for the new exercise set
+      int sets = Integer.parseInt(setsField.getText());
+      int reps = Integer.parseInt(repsField.getText());
+      int weight = Integer.parseInt(weightField.getText());
+
+      // Call a method in the controller to add the new exercise set to the specified exercise
+      getController().addExerciseSet(exercise, sets, reps, weight);
+
+      // Display a message indicating successful addition
+      showOutput("Exercise Set added successfully!", "Success");
+    }
+  }
+
 }

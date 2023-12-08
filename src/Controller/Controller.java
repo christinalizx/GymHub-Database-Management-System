@@ -1,12 +1,16 @@
 package Controller;
 
+import Model.Exercise;
+import Model.ExerciseSet;
 import Model.GymUsers;
 import Model.JDBC;
 import Model.Gym;
+import Model.Workout;
 import View.View;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -265,7 +269,6 @@ public class Controller {
     }
   }
 
-
   public Gym getGymByUser(String username) {
     try {
       Connection connection = jdbc.getConnection();
@@ -289,6 +292,91 @@ public class Controller {
     }
 
     return null; // Return null if gym information is not found
+  }
+
+  public List<Workout> getWorkouts() {
+    List<Workout> workouts = new ArrayList<>();
+
+    try (Connection connection = jdbc.getConnection()) {
+      CallableStatement callableStatement = connection.prepareCall("{call GetWorkoutsByUsername(?)}");
+      callableStatement.setString(1, loggedInUsername);
+
+      ResultSet resultSet = callableStatement.executeQuery();
+
+      while (resultSet.next()) {
+        int workoutId = resultSet.getInt("workout_id");
+        String username = resultSet.getString("username");
+        Date completionDate = resultSet.getDate("completion_date");
+        String description = resultSet.getString("description");
+        int duration = resultSet.getInt("duration");
+
+        Workout workout = new Workout(workoutId, username, completionDate, description, duration);
+
+        workouts.add(workout);
+      }
+
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+
+    return workouts;
+  }
+
+  public List<Exercise> getExercises(int workoutId) {
+    List<Exercise> exercises = new ArrayList<>();
+
+    try (Connection connection = jdbc.getConnection()) {
+      CallableStatement callableStatement = connection.prepareCall("{call GetExercisesByWorkoutId(?)}");
+      callableStatement.setString(1, loggedInUsername);
+
+      ResultSet resultSet = callableStatement.executeQuery();
+
+      while (resultSet.next()) {
+        int exerciseId = resultSet.getInt("exercise_id");
+        String exerciseName = resultSet.getString("exercise_name");
+        String notes = resultSet.getString("notes");
+
+        Exercise exercise = new Exercise(exerciseId, workoutId, exerciseName, notes);
+
+        exercises.add(exercise);
+      }
+
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+
+    return exercises;
+  }
+
+  public List<ExerciseSet> getExerciseSets(int exerciseId) {
+    List<ExerciseSet> exerciseSets = new ArrayList<>();
+
+    try (Connection connection = jdbc.getConnection()) {
+      CallableStatement callableStatement = connection.prepareCall("{call GetExerciseSetsByExerciseId(?)}");
+      callableStatement.setInt(1, exerciseId);
+
+      ResultSet resultSet = callableStatement.executeQuery();
+
+      while (resultSet.next()) {
+        int setId = resultSet.getInt("set_id");
+        int workoutId = resultSet.getInt("workout_id");
+        int sets = resultSet.getInt("sets");
+        int reps = resultSet.getInt("reps");
+        int weight = resultSet.getInt("weight");
+
+        ExerciseSet exerciseSet = new ExerciseSet(setId, exerciseId, workoutId, sets, reps, weight);
+
+        exerciseSets.add(exerciseSet);
+      }
+
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+
+    return exerciseSets;
   }
 }
 
