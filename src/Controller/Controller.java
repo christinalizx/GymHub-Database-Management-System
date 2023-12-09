@@ -71,7 +71,7 @@ public class Controller {
     return false;
   }
 
-  public void addUser(String username, String password, String address, String gymName) {
+  public void addUser(String username, String password, String address, String gymName, boolean isStaff) {
     try {
       // Get the gymId based on the selected gymName
       int gymId = getGymIdByName(gymName);
@@ -81,10 +81,74 @@ public class Controller {
 
       // Add the user to the database
       addUserToDatabase(user);
+
       System.out.println("User added successfully!");
+
+      // If the user is staff, add staff information to the gym_staff table
+      if (isStaff) {
+        addStaffToDatabase(username, gymId);
+        System.out.println("Staff information added successfully!");
+      }
     } catch (SQLException e) {
       // Handle database-related errors
       e.printStackTrace();
+    }
+  }
+
+  private void addStaffToDatabase(String username, int gymId) throws SQLException {
+    try (Connection connection = jdbc.getConnection()) {
+      String sql = "INSERT INTO gym_staff (username, gym_id) VALUES (?, ?)";
+      try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        statement.setString(1, username);
+        statement.setInt(2, gymId);
+        statement.executeUpdate();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public boolean isUserStaff() {
+
+    String query = "SELECT COUNT(*) FROM gym_staff WHERE username = ?";
+
+    try (Connection connection = jdbc.getConnection()) {
+      try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+        preparedStatement.setString(1, loggedInUsername);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        if (resultSet.next()) {
+          int count = resultSet.getInt(1);
+          return count > 0;
+        }
+
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
+
+  public void updateGymInformation(Gym gym) {
+    try (Connection connection = jdbc.getConnection()) {
+      String sql = "UPDATE gyms SET gym_name=?, address=?, opening_time=?, closing_time=? WHERE gym_id=?";
+      try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        statement.setString(1, gym.getGymName());
+        statement.setString(2, gym.getAddress());
+        statement.setTime(3, gym.getOpeningTime());
+        statement.setTime(4, gym.getClosingTime());
+        statement.setInt(5, gym.getGymId());
+
+
+        statement.executeUpdate();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
     }
   }
 

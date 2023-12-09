@@ -2,6 +2,7 @@ package View;
 
 import java.awt.*;
 import java.sql.Date;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -101,13 +102,15 @@ public class View {
   public void showRegistrationForm() {
     List<String> gymNames = getController().getGymNamesFromDatabase();
 
-    JPanel panel = new JPanel(new GridLayout(5, 2));
+    JPanel panel = new JPanel(new GridLayout(6, 2));
     JTextField usernameField = new JTextField();
     JPasswordField passwordField = new JPasswordField();
     JTextField addressField = new JTextField();
 
     DefaultComboBoxModel<String> gymModel = new DefaultComboBoxModel<>(gymNames.toArray(new String[0]));
     JComboBox<String> gymSpinner = new JComboBox<>(gymModel);
+
+    JCheckBox staffCheckbox = new JCheckBox("Staff");
 
     panel.add(new JLabel("Username:"));
     panel.add(usernameField);
@@ -117,6 +120,8 @@ public class View {
     panel.add(addressField);
     panel.add(new JLabel("Select Gym:"));
     panel.add(gymSpinner);
+    panel.add(new JLabel("Staff:"));
+    panel.add(staffCheckbox);
 
     int result = JOptionPane.showConfirmDialog(null, panel, "Register",
             JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -128,13 +133,16 @@ public class View {
       String address = addressField.getText();
 
       String selectedGym = (String) gymSpinner.getSelectedItem();
+      boolean isStaff = staffCheckbox.isSelected();
+
       if (!username.trim().isEmpty() && !password.trim().isEmpty() && !address.trim().isEmpty() && selectedGym != null) {
-        controller.addUser(username, password, address, selectedGym);
+        controller.addUser(username, password, address, selectedGym, isStaff);
       } else {
         JOptionPane.showMessageDialog(null, "All fields are required for registration.", "Error", JOptionPane.ERROR_MESSAGE);
       }
     }
   }
+
 
   public void showMainPage() {
     // Create the main page with buttons
@@ -317,15 +325,85 @@ public class View {
         JTextArea textArea = new JTextArea(userInfo);
         textArea.setEditable(false);
 
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(400, 300));
+        // Check if the current user is staff
+        if (getController().isUserStaff()) {
+          // If staff, add an "Edit" button
+          Object[] options = {"OK", "Edit"};
+          int choice = JOptionPane.showOptionDialog(
+                  null,
+                  new JScrollPane(textArea),
+                  "User Information",
+                  JOptionPane.YES_NO_OPTION,
+                  JOptionPane.INFORMATION_MESSAGE,
+                  null,
+                  options,
+                  options[0]
+          );
 
-        JOptionPane.showMessageDialog(null, scrollPane, "User Information", JOptionPane.INFORMATION_MESSAGE);
+          // Check the user's choice
+          if (choice == 1) {
+            // User clicked "Edit" - implement the logic to edit and update the gym information
+            editGymInformation(gym);
+          }
+        } else {
+          // If not staff, display the information without the "Edit" button
+          JScrollPane scrollPane = new JScrollPane(textArea);
+          scrollPane.setPreferredSize(new Dimension(400, 300));
+          JOptionPane.showMessageDialog(null, scrollPane, "User Information", JOptionPane.INFORMATION_MESSAGE);
+        }
       } else {
         showError("Gym information not found for the user.", "Error");
       }
     } else {
       showError("User information not found.", "Error");
+    }
+  }
+
+  public void editGymInformation(Gym gym) {
+    JTextField gymNameField = new JTextField(gym.getGymName());
+    JTextField addressField = new JTextField(gym.getAddress());
+    JTextField openingTimeField = new JTextField(String.valueOf(gym.getOpeningTime()));
+    JTextField closingTimeField = new JTextField(String.valueOf(gym.getClosingTime()));
+
+    JPanel panel = new JPanel(new GridLayout(4, 2));
+    panel.add(new JLabel("Gym Name:"));
+    panel.add(gymNameField);
+    panel.add(new JLabel("Gym Address:"));
+    panel.add(addressField);
+    panel.add(new JLabel("Opening Time:"));
+    panel.add(openingTimeField);
+    panel.add(new JLabel("Closing Time:"));
+    panel.add(closingTimeField);
+
+    int result = JOptionPane.showConfirmDialog(
+            null,
+            panel,
+            "Edit Gym Information",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+    );
+
+    if (result == JOptionPane.OK_OPTION) {
+      // Retrieve the edited information
+      String editedGymName = gymNameField.getText();
+      String editedAddress = addressField.getText();
+      String editedOpeningTime = openingTimeField.getText();
+      String editedClosingTime = closingTimeField.getText();
+
+      // Update the Gym object with the edited information
+      gym.setGymName(editedGymName);
+      gym.setAddress(editedAddress);
+      gym.setOpeningTime(Time.valueOf(editedOpeningTime));
+      gym.setClosingTime(Time.valueOf(editedClosingTime));
+
+      // Update the gym information in the database
+      getController().updateGymInformation(gym);
+
+      // Display a success message
+      showOutput("Gym information updated successfully!", "Success");
+
+      // Refresh the displayed gym information
+      showGymInformation();
     }
   }
 
