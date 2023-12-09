@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.*;
 
@@ -16,6 +17,7 @@ import Model.Exercise;
 import Model.ExerciseSet;
 import Model.GymUsers;
 import Model.Gym;
+import Model.Post;
 import Model.Workout;
 
 public class View {
@@ -190,17 +192,97 @@ public class View {
     JComboBox<String> forumSpinner = new JComboBox<>(forumNames.toArray(new String[0]));
 
     JPanel forumPanel = new JPanel(new GridLayout(2, 2));
-    forumPanel.add(new JLabel("Select Forum:"));
+    forumPanel.add(new JLabel("Select Post:"));
     forumPanel.add(forumSpinner);
 
-    int result = JOptionPane.showConfirmDialog(null, forumPanel, "Select Forum",
+    int result = JOptionPane.showConfirmDialog(null, forumPanel, "Select Post",
             JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
     if (result == JOptionPane.OK_OPTION) {
       String selectedForum = (String) forumSpinner.getSelectedItem();
       // Call the controller method to handle the selected forum
-      controller.handleForumPost(selectedForum);
+      handleForumPost(selectedForum);
     }
+  }
+
+  public void handleForumPost(String selectedForum) {
+    // Get the posts for the selected forum
+    List<Post> posts = getController().getPostsForForum(selectedForum);
+
+    // Display the forum page with posts and likes
+    showForumPage(selectedForum, posts);
+  }
+
+  private void showForumPage(String forumName, List<Post> posts) {
+    // Example: Display posts and likes in a JTextArea
+    JTextArea forumTextArea = new JTextArea();
+    forumTextArea.append("Post: " + forumName + "\n\n");
+
+    for (Post post : posts) {
+      forumTextArea.append("Post ID: " + post.getPostId() + "\n");
+      forumTextArea.append("Creator: " + post.getCreator() + "\n");
+      forumTextArea.append("Date: " + post.getPostDate() + "\n");
+      forumTextArea.append("Post: " + post.getPostText() + "\n");
+
+      int likes = getController().getPostLikes(post.getPostId());
+      forumTextArea.append("Likes: " + String.valueOf(likes) + "\n\n");
+    }
+
+    // Add a "New Post" button
+    JButton newPostButton = new JButton("New Post");
+    newPostButton.addActionListener(e -> handleNewPost(forumName));
+    forumTextArea.append("\n");
+    forumTextArea.append("-----\n");
+    forumTextArea.append("Click 'New Post' to create a new post.\n");
+    forumTextArea.append("-----\n");
+
+    JScrollPane scrollPane = new JScrollPane(forumTextArea);
+    scrollPane.setPreferredSize(new Dimension(400, 300));
+
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.add(scrollPane, BorderLayout.CENTER);
+    panel.add(newPostButton, BorderLayout.SOUTH);
+
+    JOptionPane.showMessageDialog(null, panel, "Post Page", JOptionPane.INFORMATION_MESSAGE);
+  }
+
+  private void handleNewPost(String forumName) {
+    // Implement logic to collect information for the new post
+    JTextField postTextField = new JTextField();
+
+    JPanel panel = new JPanel(new GridLayout(2, 2));
+    panel.add(new JLabel("New Post:"));
+    panel.add(postTextField);
+
+    // Create a custom OK button
+    JButton okButton = new JButton("OK");
+
+    // Add an ActionListener to the OK button
+    okButton.addActionListener(e -> {
+      // Get the parent window of the button (which is the current panel)
+      Window parentWindow = SwingUtilities.getWindowAncestor(SwingUtilities.getWindowAncestor((Component) e.getSource()));
+
+      // Dispose of the parent window (close the current panel)
+      if (parentWindow != null) {
+        parentWindow.dispose();
+      }
+
+      // Retrieve information for the new post
+      String postText = postTextField.getText();
+
+      // Call a method in the controller to add the new post
+      getController().addPost(forumName, postText);
+
+      // Display a message indicating successful addition
+      JOptionPane.showMessageDialog(null, "Post added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+      // Refresh the forum page with the updated posts
+      showForumPage(forumName, getController().getPostsForForum(forumName));
+    });
+
+    Object[] options = {okButton, "Cancel"};
+    int result = JOptionPane.showOptionDialog(null, panel, "Create New Post",
+            JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
   }
 
   public void showGymInformation() {
@@ -234,11 +316,6 @@ public class View {
     } else {
       showError("User information not found.", "Error");
     }
-  }
-
-  public void showWorkoutData() {
-    // Implement logic to display workout & exercise data
-    showMessage("Workout & Exercise Data Placeholder", "Workout & Exercise Data");
   }
 
   public void showUserInformation() {
@@ -300,7 +377,6 @@ public class View {
       System.exit(0);
     }
   }
-
 
   private void handleEditUserInformation(GymUsers gymUser) {
     JTextField usernameField = new JTextField(gymUser.getUsername());

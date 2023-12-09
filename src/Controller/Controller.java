@@ -5,8 +5,8 @@ import Model.ExerciseSet;
 import Model.GymUsers;
 import Model.JDBC;
 import Model.Gym;
+import Model.Post;
 import Model.Workout;
-import View.View;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -16,9 +16,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
+import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class Controller {
   private final JDBC jdbc;
@@ -93,12 +94,6 @@ public class Controller {
 
   public String getLoggedInUsername() {
     return loggedInUsername;
-  }
-
-  public void handleForumPost(String selectedForum) {
-    // Add the logic to handle forum post button click
-    // For now, just print a message
-    System.out.println("Posting in forum: " + selectedForum);
   }
 
   private int getGymIdByName(String gymName) throws SQLException {
@@ -446,9 +441,97 @@ public class Controller {
       // Handle the exception appropriately
     }
   }
+
+  public List<Post> getPostsForForum(String forumName) {
+    List<Post> posts = new ArrayList<>();
+
+    try (Connection connection = jdbc.getConnection()) {
+      // Prepare the call to the stored procedure
+      String callStatement = "{call GetPostsForForum(?)}";
+      try (CallableStatement callableStatement = connection.prepareCall(callStatement)) {
+        // Set the input parameter
+        callableStatement.setString(1, forumName);
+
+        // Execute the stored procedure
+        ResultSet resultSet = callableStatement.executeQuery();
+
+        // Process the result set
+        while (resultSet.next()) {
+          int postId = resultSet.getInt("post_id");
+          int forumId = resultSet.getInt("forum_id");
+          String creator = resultSet.getString("creator");
+          Date postDate = resultSet.getDate("post_date");
+          String postText = resultSet.getString("post");
+
+          // Create a Post object with the retrieved information
+          Post post = new Post(postId, forumId, creator, postDate, postText);
+          posts.add(post);
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+
+    return posts;
+  }
+
+  public int getPostLikes(int postId) {
+    int likesCount = 0;
+
+    try (Connection connection = jdbc.getConnection();
+         CallableStatement callableStatement = connection.prepareCall("{CALL GetLikesCountForPost(?, ?)}")) {
+
+      callableStatement.setInt(1, postId);
+      callableStatement.registerOutParameter(2, Types.INTEGER);
+
+      callableStatement.execute();
+      likesCount = callableStatement.getInt(2);
+
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+
+    return likesCount;
+  }
+
+  public void addPost(String forumName, String postText) {
+    try (Connection connection = jdbc.getConnection()) {
+      // Get the forum_id for the given forumName
+      int forumId = getForumIdByName(connection, forumName);
+
+      // Prepare the call to the stored procedure
+      String callStatement = "{call AddPost(?, ?, ?, ?)}";
+      try (CallableStatement callableStatement = connection.prepareCall(callStatement)) {
+        // Set the input parameters
+        callableStatement.setInt(1, forumId);
+        callableStatement.setString(2, getLoggedInUsername()); // Assuming a method to get the logged-in user
+        callableStatement.setDate(3, Date.valueOf(LocalDate.now()));
+        callableStatement.setString(4, postText);
+
+        // Execute the stored procedure
+        callableStatement.executeUpdate();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+  }
+
+  private int getForumIdByName(Connection connection, String forumName) throws SQLException {
+    int forumId = -1;
+
+    // Implement the logic to retrieve the forum_id for the given forumName
+    String query = "SELECT forum_id FROM forums WHERE forum_name = ?";
+    try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+      preparedStatement.setString(1, forumName);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        forumId = resultSet.getInt("forum_id");
+      }
+    }
+
+    return forumId;
+  }
 }
-
-
-
-
-
