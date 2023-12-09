@@ -1,14 +1,9 @@
 package View;
 
 import java.awt.*;
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.*;
 
@@ -214,36 +209,50 @@ public class View {
   }
 
   private void showForumPage(String forumName, List<Post> posts) {
-    // Example: Display posts and likes in a JTextArea
-    JTextArea forumTextArea = new JTextArea();
-    forumTextArea.append("Post: " + forumName + "\n\n");
+    // Create a panel to hold posts
+    JPanel postsPanel = new JPanel();
+    postsPanel.setLayout(new BoxLayout(postsPanel, BoxLayout.Y_AXIS));
 
+    // Display posts and likes in the panel
     for (Post post : posts) {
-      forumTextArea.append("Post ID: " + post.getPostId() + "\n");
-      forumTextArea.append("Creator: " + post.getCreator() + "\n");
-      forumTextArea.append("Date: " + post.getPostDate() + "\n");
-      forumTextArea.append("Post: " + post.getPostText() + "\n");
+      JPanel postPanel = new JPanel(new BorderLayout());
+      postPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add spacing
 
-      int likes = getController().getPostLikes(post.getPostId());
-      forumTextArea.append("Likes: " + String.valueOf(likes) + "\n\n");
+      // Add post content
+      JTextArea postContent = new JTextArea();
+      postContent.append("Post ID: " + post.getPostId() + "\n");
+      postContent.append("Creator: " + post.getCreator() + "\n");
+      postContent.append("Date: " + post.getPostDate() + "\n");
+      postContent.append("Post: " + post.getPostText() + "\n");
+      postContent.append("Likes: " + getController().getPostLikes(post.getPostId()) + "  ");
+
+      // Add "Like" button
+      JButton likeButton = new JButton("Like");
+      likeButton.setPreferredSize(new Dimension(60, 20)); // Set button size
+      likeButton.addActionListener(e -> handleLikePost(post.getPostId()));
+
+      postPanel.add(postContent, BorderLayout.CENTER);
+      postPanel.add(likeButton, BorderLayout.LINE_END);
+
+      postsPanel.add(postPanel);
     }
 
-    // Add a "New Post" button
+    // Add a space between posts and the "New Post" button
+    postsPanel.add(Box.createVerticalStrut(10));
+
+    // Add a "New Post" button outside of the posts panel
     JButton newPostButton = new JButton("New Post");
     newPostButton.addActionListener(e -> handleNewPost(forumName));
-    forumTextArea.append("\n");
-    forumTextArea.append("-----\n");
-    forumTextArea.append("Click 'New Post' to create a new post.\n");
-    forumTextArea.append("-----\n");
 
-    JScrollPane scrollPane = new JScrollPane(forumTextArea);
+    JScrollPane scrollPane = new JScrollPane(postsPanel);
     scrollPane.setPreferredSize(new Dimension(400, 300));
 
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.add(scrollPane, BorderLayout.CENTER);
-    panel.add(newPostButton, BorderLayout.SOUTH);
+    // Create a new panel to hold the scrollPane and "New Post" button
+    JPanel mainPanel = new JPanel(new BorderLayout());
+    mainPanel.add(scrollPane, BorderLayout.CENTER);
+    mainPanel.add(newPostButton, BorderLayout.SOUTH);
 
-    JOptionPane.showMessageDialog(null, panel, "Post Page", JOptionPane.INFORMATION_MESSAGE);
+    JOptionPane.showMessageDialog(null, mainPanel, "Post Page", JOptionPane.INFORMATION_MESSAGE);
   }
 
   private void handleNewPost(String forumName) {
@@ -283,6 +292,11 @@ public class View {
     Object[] options = {okButton, "Cancel"};
     int result = JOptionPane.showOptionDialog(null, panel, "Create New Post",
             JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+  }
+
+  private void handleLikePost(int postId) {
+    // Implement logic to add or remove a like for the specified post
+    getController().toggleLike(postId);
   }
 
   public void showGymInformation() {

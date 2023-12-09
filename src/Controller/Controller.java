@@ -534,4 +534,22 @@ public class Controller {
 
     return forumId;
   }
+
+  public void toggleLike(int postId) {
+    try (Connection connection = jdbc.getConnection()) {
+      // Prepare the call to the stored procedure
+      String callStatement = "{call ToggleLike(?, ?)}";
+      try (CallableStatement callableStatement = connection.prepareCall(callStatement)) {
+        // Set the input parameters
+        callableStatement.setString(1, getLoggedInUsername()); // Assuming a method to get the logged-in user
+        callableStatement.setInt(2, postId);
+
+        // Execute the stored procedure
+        callableStatement.executeUpdate();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+  }
 }
