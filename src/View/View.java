@@ -332,7 +332,7 @@ public class View {
           int choice = JOptionPane.showOptionDialog(
                   null,
                   new JScrollPane(textArea),
-                  "User Information",
+                  "Gym Information",
                   JOptionPane.YES_NO_OPTION,
                   JOptionPane.INFORMATION_MESSAGE,
                   null,
@@ -355,7 +355,7 @@ public class View {
         showError("Gym information not found for the user.", "Error");
       }
     } else {
-      showError("User information not found.", "Error");
+      showError("Gym information not found.", "Error");
     }
   }
 
