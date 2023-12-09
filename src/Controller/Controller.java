@@ -552,4 +552,40 @@ public class Controller {
       // Handle the exception appropriately
     }
   }
+
+  public List<String> getAllUsernames() {
+    List<String> usernames = new ArrayList<>();
+
+    try (Connection connection = jdbc.getConnection()) {
+      String sql = "SELECT username FROM gym_users";
+      try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (ResultSet resultSet = statement.executeQuery()) {
+          while (resultSet.next()) {
+            String username = resultSet.getString("username");
+            usernames.add(username);
+          }
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // Handle the exception appropriately
+    }
+
+    return usernames;
+  }
+
+  public boolean followUser(String followerUsername, String targetUsername) {
+    try (Connection connection = jdbc.getConnection()) {
+      String sql = "INSERT INTO user_follows_user (user1, user2) VALUES (?, ?)";
+      try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        statement.setString(1, followerUsername);
+        statement.setString(2, targetUsername);
+        statement.executeUpdate();
+        return true; // Operation successful
+      }
+    } catch (SQLException e) {
+      // Handle the exception appropriately
+      return false; // Operation failed
+    }
+  }
 }

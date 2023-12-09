@@ -205,10 +205,10 @@ public class View {
     List<Post> posts = getController().getPostsForForum(selectedForum);
 
     // Display the forum page with posts and likes
-    showForumPage(selectedForum, posts);
+    showForumPosts(selectedForum, posts);
   }
 
-  private void showForumPage(String forumName, List<Post> posts) {
+  private void showForumPosts(String forumName, List<Post> posts) {
     // Create a panel to hold posts
     JPanel postsPanel = new JPanel();
     postsPanel.setLayout(new BoxLayout(postsPanel, BoxLayout.Y_AXIS));
@@ -286,7 +286,7 @@ public class View {
       JOptionPane.showMessageDialog(null, "Post added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
 
       // Refresh the forum page with the updated posts
-      showForumPage(forumName, getController().getPostsForForum(forumName));
+      showForumPosts(forumName, getController().getPostsForForum(forumName));
     });
 
     Object[] options = {okButton, "Cancel"};
@@ -351,6 +351,9 @@ public class View {
       JButton deleteButton = new JButton("Delete");
       deleteButton.addActionListener(e -> handleDeleteUser(gymUser.getUsername()));
 
+      JButton followButton = new JButton("Follow Users");
+      followButton.addActionListener(e -> showAndFollowUsers());
+
       JPanel panel = new JPanel();
       panel.setLayout(new BorderLayout());
       panel.add(scrollPane, BorderLayout.CENTER);
@@ -359,6 +362,7 @@ public class View {
       JPanel buttonPanel = new JPanel();
       buttonPanel.add(editButton);
       buttonPanel.add(deleteButton);
+      buttonPanel.add(followButton);
 
       // Add the button panel to the main panel
       panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -366,6 +370,41 @@ public class View {
       JOptionPane.showMessageDialog(null, panel, "User Information", JOptionPane.INFORMATION_MESSAGE);
     } else {
       showError("User information not found.", "Error");
+    }
+  }
+
+  private void showAndFollowUsers() {
+    List<String> usernames = getController().getAllUsernames();
+
+    if (!usernames.isEmpty()) {
+      JPanel userPanel = new JPanel();
+      userPanel.setLayout(new GridLayout(0, 2));
+
+      for (String user : usernames) {
+        JButton followUserButton = new JButton("Follow");
+        followUserButton.addActionListener(e -> handleFollowUser(user));
+
+        userPanel.add(new JLabel(user));
+        userPanel.add(followUserButton);
+      }
+
+      JOptionPane.showMessageDialog(null, userPanel, "Follow Users", JOptionPane.PLAIN_MESSAGE);
+    } else {
+      showError("No users found.", "Error");
+    }
+  }
+
+  private void handleFollowUser(String targetUsername) {
+    String loggedInUsername = getController().getLoggedInUsername();
+    if (!loggedInUsername.equals(targetUsername)) {
+      boolean success = getController().followUser(loggedInUsername, targetUsername);
+      if (success) {
+        showOutput("You are now following " + targetUsername, "Success");
+      } else {
+        showError("You are already following " + targetUsername, "Error");
+      }
+    } else {
+      showError("You cannot follow yourself.", "Error");
     }
   }
 
