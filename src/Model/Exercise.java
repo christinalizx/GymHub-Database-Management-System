@@ -28,4 +28,9 @@ public class Exercise {
   public String getNotes() {
     return notes;
   }
+
+  @Override
+  public String toString() {
+    return exercise_name;
+  }
 }

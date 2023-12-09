@@ -390,6 +390,17 @@ public class View {
 
     // Create a button for adding a new workout
     JButton newWorkoutButton = new JButton("New Workout");
+    newWorkoutButton.addActionListener(e -> {
+      // Get the parent window of the button (which is the current panel)
+      Window parentWindow = SwingUtilities.getWindowAncestor((Component) e.getSource());
+
+      // Dispose of the parent window (close the current panel)
+      if (parentWindow != null) {
+        parentWindow.dispose();
+      }
+
+      handleNewWorkout();
+    });
     panel.add(newWorkoutButton, BorderLayout.SOUTH);
 
     // Show the dialog with the panel
@@ -401,38 +412,84 @@ public class View {
         // User selected an existing workout
         Workout selectedWorkout = (Workout) workoutComboBox.getSelectedItem();
         // Call a method to display exercises for the selected workout
-        showExercises(controller.getExercises(selectedWorkout.getWorkoutId()));
+        showExercises(selectedWorkout.getWorkoutId(), controller.getExercises(selectedWorkout.getWorkoutId()));
       } else {
-        // User clicked "New Workout" button
-        handleNewWorkout();
+        // User clicked "New Workout" button (handled by the ActionListener)
       }
     }
   }
 
   // Method to display the list of exercises
-  public void showExercises(List<Exercise> exercises) {
-    // Implement logic to display the list of exercises, handle user interaction
+  public void showExercises(int workoutId, List<Exercise> exercises) {
+    // Create a panel to hold the components
+    JPanel panel = new JPanel(new BorderLayout());
+
+    // Create a combo box for existing exercises
     JComboBox<Exercise> exerciseComboBox = new JComboBox<>(exercises.toArray(new Exercise[0]));
-    int result = JOptionPane.showConfirmDialog(null, exerciseComboBox, "Select Exercise",
+    panel.add(exerciseComboBox, BorderLayout.CENTER);
+
+    // Create a button for adding a new exercise
+    JButton newExerciseButton = new JButton("New Exercise");
+    newExerciseButton.addActionListener(e -> {
+      // Get the parent window of the button (which is the current panel)
+      Window parentWindow = SwingUtilities.getWindowAncestor((Component) e.getSource());
+
+      // Dispose of the parent window (close the current panel)
+      if (parentWindow != null) {
+        parentWindow.dispose();
+      }
+
+      handleNewExercise(workoutId);
+    });
+    panel.add(newExerciseButton, BorderLayout.SOUTH);
+
+    // Show the dialog with the panel
+    int result = JOptionPane.showConfirmDialog(null, panel, "Select or Create Exercise",
             JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
     if (result == JOptionPane.OK_OPTION) {
-      Exercise selectedExercise = (Exercise) exerciseComboBox.getSelectedItem();
-      // Call a method to display exercise sets for the selected exercise
-      showExerciseSets(controller.getExerciseSets(selectedExercise.getExerciseId()));
+      if (exerciseComboBox.getSelectedItem() != null) {
+        // User selected an existing exercise
+        Exercise selectedExercise = (Exercise) exerciseComboBox.getSelectedItem();
+        // Call a method to display exercise sets for the selected exercise
+        showExerciseSets(workoutId, selectedExercise.getExerciseId(), controller.getExerciseSets(selectedExercise.getExerciseId()));
+      } else {
+        // User clicked "New Exercise" button (handled by the ActionListener)
+      }
     }
   }
 
   // Method to display the list of exercise sets
-  public void showExerciseSets(List<ExerciseSet> exerciseSets) {
-    // Implement logic to display the list of exercise sets, handle user interaction
+  public void showExerciseSets(int workoutId, int exerciseId, List<ExerciseSet> exerciseSets) {
+    // Create a panel to hold the components
+    JPanel panel = new JPanel(new BorderLayout());
+
+    // Create a text area for displaying exercise sets
     JTextArea exerciseSetsTextArea = new JTextArea();
     exerciseSets.forEach(set -> exerciseSetsTextArea.append(set.toString() + "\n"));
 
     JScrollPane scrollPane = new JScrollPane(exerciseSetsTextArea);
     scrollPane.setPreferredSize(new Dimension(400, 300));
+    panel.add(scrollPane, BorderLayout.CENTER);
 
-    JOptionPane.showMessageDialog(null, scrollPane, "Exercise Sets", JOptionPane.INFORMATION_MESSAGE);
+    // Create a button for adding a new exercise set
+    JButton newExerciseSetButton = new JButton("New Exercise Set");
+    newExerciseSetButton.addActionListener(e -> {
+      // Get the parent window of the button (which is the current panel)
+      Window parentWindow = SwingUtilities.getWindowAncestor((Component) e.getSource());
+
+      // Dispose of the parent window (close the current panel)
+      if (parentWindow != null) {
+        parentWindow.dispose();
+      }
+
+      handleNewExerciseSet(workoutId, exerciseId);
+    });
+    panel.add(newExerciseSetButton, BorderLayout.SOUTH);
+
+    // Show the dialog with the panel
+    JOptionPane.showConfirmDialog(null, panel, "Exercise Sets",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
   }
 
   // Method to handle adding a new workout
@@ -459,7 +516,14 @@ public class View {
       getController().addWorkout(Date.valueOf(LocalDate.now()), description, duration);
 
       // Display a message indicating successful addition
+      Window parentWindow = SwingUtilities.getWindowAncestor(panel);
+
+      // Dispose of the parent window (which is the JDialog in this case)
+      if (parentWindow != null) {
+        parentWindow.dispose();
+      }
       showOutput("Workout added successfully!", "Success");
+      showWorkouts(controller.getWorkouts());
     }
   }
 
@@ -488,11 +552,12 @@ public class View {
 
       // Display a message indicating successful addition
       showOutput("Exercise added successfully!", "Success");
+      showExercises(workoutId, controller.getExercises(workoutId));
     }
   }
 
   // Method to handle adding a new exercise set within an exercise
-  public void handleNewExerciseSet(int exerciseId, int workoutId) {
+  public void handleNewExerciseSet(int workoutId, int exerciseId) {
     // Implement logic to collect information for the new exercise set
 
     JTextField setsField = new JTextField();
@@ -521,6 +586,7 @@ public class View {
 
       // Display a message indicating successful addition
       showOutput("Exercise Set added successfully!", "Success");
+      showExerciseSets(workoutId, exerciseId, controller.getExerciseSets(exerciseId));
     }
   }
 

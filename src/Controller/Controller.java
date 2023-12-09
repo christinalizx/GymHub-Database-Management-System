@@ -351,7 +351,7 @@ public class Controller {
 
     try (Connection connection = jdbc.getConnection()) {
       CallableStatement callableStatement = connection.prepareCall("{call GetExercisesByWorkoutId(?)}");
-      callableStatement.setString(1, loggedInUsername);
+      callableStatement.setInt(1, workoutId);
 
       ResultSet resultSet = callableStatement.executeQuery();
 
