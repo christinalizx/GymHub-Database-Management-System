@@ -295,10 +295,7 @@ public class View {
 
       if (gym != null) {
         // Display gym information
-        String userInfo = "Username: " + gymUser.getUsername() + "\n" +
-                "Password: " + gymUser.getPassword() + "\n" +
-                "Address: " + gymUser.getAddress() + "\n" +
-                "Gym Name: " + gym.getGymName() + "\n" +
+        String userInfo = "Gym Name: " + gym.getGymName() + "\n" +
                 "Gym Address: " + gym.getAddress() + "\n" +
                 "Opening Time: " + gym.getOpeningTime() + "\n" +
                 "Closing Time: " + gym.getClosingTime();
